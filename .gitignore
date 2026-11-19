@@ -13,6 +13,12 @@ oort
 *.env.*
 turnstile.env
 
+# Node & Frontend Build
+node_modules/
+dist/
+console-web/node_modules/
+console-web/dist/
+
 # OS & Editor files
 *.bak
 .DS_Store
