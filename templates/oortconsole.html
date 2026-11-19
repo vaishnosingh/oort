@@ -2,13 +2,65 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OORT Storage — Sovereign S3 &amp; Enterprise NAS Console</title>
-<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="6" fill="%23eef3f8"/><ellipse cx="16" cy="16" rx="14" ry="5.5" fill="none" stroke="%2338bdf8" stroke-width="1.5" transform="rotate(-24 16 16)"/></svg>'>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>OORT Console — Sovereign S3 Object Storage &amp; Distributed NAS Cluster</title>
+<meta name="description" content="High-performance S3-compatible sovereign object storage and distributed NAS cluster console. Real-time bucket telemetry, multi-part uploads, continuous versioning, zero-egress architecture, and WebDAV endpoints.">
+<meta name="keywords" content="s3 object storage, sovereign cloud, enterprise nas, private cloud, webdav, distributed storage, nvme cluster, minio, scylladb">
+<meta name="author" content="OORT Cloud Infrastructure">
+<link rel="canonical" href="https://oort.linuxguy.space/console">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+
+<!-- OpenGraph / Social Meta Tags -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://oort.linuxguy.space/console">
+<meta property="og:title" content="OORT Console — Sovereign S3 Object Storage &amp; Distributed NAS">
+<meta property="og:description" content="Enterprise sovereign cloud storage cluster with zero egress tax, high-speed NVMe throughput, continuous versioning, and native WebDAV drives.">
+<meta property="og:image" content="https://oort.linuxguy.space/og-image.png">
+<meta property="og:site_name" content="OORT Sovereign Storage">
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@OortStorage">
+<meta name="twitter:creator" content="@OortStorage">
+<meta name="twitter:title" content="OORT Console — Sovereign S3 Object Storage">
+<meta name="twitter:description" content="High-performance S3-compatible sovereign object storage and distributed NAS cluster console.">
+<meta name="twitter:image" content="https://oort.linuxguy.space/og-image.png">
+
+<!-- PWA & Mobile Optimization -->
+<meta name="theme-color" content="#020308">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OORT">
+
+<!-- Favicon -->
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="6" fill="%23eef3f8"/><ellipse cx="16" cy="16" rx="14" ry="5.5" fill="none" stroke="%2338bdf8" stroke-width="1.8" transform="rotate(-24 16 16)"/></svg>'>
+
+<!-- Typography: Space Grotesk + JetBrains Mono -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "OORT Sovereign S3 & NAS Console",
+  "url": "https://oort.linuxguy.space/console",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "browserRequirements": "Requires modern browser with HTML5 and ES6 support",
+  "softwareVersion": "2.4.0",
+  "description": "High-performance S3-compatible sovereign object storage and distributed NAS cluster console with zero egress tax.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0.00",
+    "priceCurrency": "USD"
+  }
+}
+</script>
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════
@@ -1047,14 +1099,135 @@ html, body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+/* Mobile Menu Button */
+.mobile-menu-btn {
+  display: none;
 }
+
+.mobile-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 3, 8, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 45;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ez);
+}
+
+.mobile-sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Keyboard Focus Accessibility */
+:focus-visible {
+  outline: 2px solid var(--ac-hex) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 12px var(--ac-glow) !important;
+}
+
+/* Responsive Breakpoints & Device Optimization */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-w: 240px;
+  }
+  .app-topbar {
+    padding: 0 20px;
+  }
+  .view-panel {
+    padding: 24px 20px 50px;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .search-box-wrap input {
+    width: 170px;
+  }
+  .search-box-wrap input:focus {
+    width: 220px;
+  }
+}
+
 @media (max-width: 768px) {
-  .app-sidebar { transform: translateX(-100%); }
-  .app-main { margin-left: 0; }
-  .kpi-grid { grid-template-columns: 1fr; }
+  .mobile-menu-btn {
+    display: inline-flex !important;
+  }
+  .app-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.35s var(--ez);
+    width: 280px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  }
+  .app-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .app-main {
+    margin-left: 0;
+    width: 100%;
+  }
+  .app-topbar {
+    padding: 0 16px;
+    height: 58px;
+    gap: 10px;
+  }
+  .search-box-wrap {
+    display: none; /* Hide topbar search on small mobile to avoid cramped buttons */
+  }
+  .view-panel {
+    padding: 18px 14px 40px;
+  }
+  .view-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .view-title-group h1 {
+    font-size: 22px;
+  }
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .kpi-value, .kpi-val {
+    font-size: 28px;
+  }
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .enterprise-table, .data-table {
+    min-width: 600px; /* Ensure table remains readable with horizontal scroll */
+  }
+  .modal-dialog, .modal-card {
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 30px);
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .batch-toolbar {
+    width: calc(100% - 24px);
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 16px;
+  }
+  .batch-toolbar.active {
+    transform: translateX(-50%) translateY(0);
+  }
+  .btn {
+    min-height: 40px;
+  }
+  .nav-link {
+    min-height: 44px;
+  }
 }
 </style>
 
@@ -1136,11 +1309,17 @@ html, body {
     </div>
   </aside>
 
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="mobile-sidebar-overlay" id="mobile-sidebar-overlay" onclick="toggleMobileSidebar(false)"></div>
+
   <!-- ════════════════════ MAIN CONTENT SHELL ════════════════════ -->
   <main class="app-main">
     <!-- Top Navigation Bar -->
     <header class="app-topbar">
       <div class="topbar-left">
+        <button class="btn btn-secondary btn-icon btn-sm mobile-menu-btn" id="btn-mobile-sidebar-toggle" onclick="toggleMobileSidebar()" title="Toggle Navigation Menu">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
         <div class="topbar-breadcrumbs" id="topbar-breadcrumbs">
           <span class="crumb-link" onclick="navigateToPrefix('')">root</span>
         </div>
@@ -1761,7 +1940,7 @@ html, body {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Folder Name</label>
-        <input type="text" id="mkdir-name-input" class="form-input" placeholder="e.g. documents, backups, photos">
+        <input type="text" id="mkdir-name-input" class="form-input" placeholder="e.g. documents, backups, photos" onkeydown="if(event.key==='Enter'){event.preventDefault();submitMkdir();}" autofocus>
       </div>
     </div>
     <div class="modal-footer">
@@ -1781,7 +1960,7 @@ html, body {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Bucket Name</label>
-        <input type="text" id="create-bucket-name-input" class="form-input" placeholder="e.g. archive-2026, media-store">
+        <input type="text" id="create-bucket-name-input" class="form-input" placeholder="e.g. archive-2026, media-store" onkeydown="if(event.key==='Enter'){event.preventDefault();submitCreateBucket();}">
         <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">Must consist of lowercase letters, numbers, and hyphens.</span>
       </div>
     </div>
@@ -1806,7 +1985,7 @@ html, body {
       </div>
       <div class="form-group">
         <label class="form-label">Destination Key</label>
-        <input type="text" id="move-dest-input" class="form-input mono-cell">
+        <input type="text" id="move-dest-input" class="form-input mono-cell" onkeydown="if(event.key==='Enter'){event.preventDefault();submitMoveObject();}">
       </div>
     </div>
     <div class="modal-footer">
@@ -1908,7 +2087,7 @@ html, body {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Domain Name (FQDN)</label>
-        <input type="text" id="domain-name-input" class="form-input mono-cell" placeholder="e.g. assets.example.com">
+        <input type="text" id="domain-name-input" class="form-input mono-cell" placeholder="e.g. assets.example.com" onkeydown="if(event.key==='Enter'){event.preventDefault();submitAddDomain();}">
         <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">Configure a CNAME record pointing to <code style="color:#60a5fa;">oort.linuxguy.space</code> at your DNS provider.</span>
       </div>
     </div>
@@ -1929,7 +2108,7 @@ html, body {
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Requested Additional Capacity (GB)</label>
-        <input type="number" id="quota-amount-input" class="form-input" min="1" max="1000" value="25">
+        <input type="number" id="quota-amount-input" class="form-input" min="1" max="1000" value="25" onkeydown="if(event.key==='Enter'){event.preventDefault();submitQuotaRequest();}">
       </div>
     </div>
     <div class="modal-footer">
@@ -2045,6 +2224,9 @@ let state = {
 /* ─── API Client Wrapper ─── */
 async function api(path, opts = {}) {
   try {
+    if (typeof opts === 'string') {
+      opts = { method: opts };
+    }
     const url = new URL(path, location.origin);
     const headers = {
       'X-Session-Id': SID,
@@ -2115,6 +2297,11 @@ function switchView(viewName) {
 
   const targetNav = document.querySelector(`.app-sidebar .nav-link[data-view="${viewName}"]`);
   if (targetNav) targetNav.classList.add('active');
+
+  // Auto-close mobile sidebar when navigating
+  if (window.innerWidth <= 768) {
+    toggleMobileSidebar(false);
+  }
 
   location.hash = viewName;
 
@@ -3213,12 +3400,26 @@ async function submitQuotaRequest() {
   }
 }
 
-/* ─── Modal Helpers ─── */
+/* ─── Modal Helpers & Mobile Drawer ─── */
+function toggleMobileSidebar(force) {
+  const sidebar = document.getElementById('app-sidebar');
+  const overlay = document.getElementById('mobile-sidebar-overlay');
+  if (!sidebar) return;
+  const isOpen = sidebar.classList.contains('mobile-open');
+  const shouldOpen = typeof force === 'boolean' ? force : !isOpen;
+  sidebar.classList.toggle('mobile-open', shouldOpen);
+  if (overlay) overlay.classList.toggle('active', shouldOpen);
+}
+
 function openModal(id) {
   const m = document.getElementById(id);
   if (m) {
     m.classList.add('show');
     m.classList.add('active');
+    setTimeout(() => {
+      const input = m.querySelector('input:not([readonly]):not([type="hidden"]), textarea');
+      if (input) input.focus();
+    }, 60);
   }
 }
 
@@ -3235,6 +3436,69 @@ window.addEventListener('click', (e) => {
   if (e.target && (e.target.classList.contains('modal-backdrop') || e.target.classList.contains('modal-overlay'))) {
     e.target.classList.remove('show');
     e.target.classList.remove('active');
+  }
+});
+
+/* ─── Keyboard Accessibility & Shortcuts ─── */
+window.addEventListener('keydown', (e) => {
+  // ESC: Close open modals, or clear batch selection
+  if (e.key === 'Escape') {
+    const openModals = document.querySelectorAll('.modal-backdrop.show, .modal-backdrop.active, .modal-overlay.show, .modal-overlay.active');
+    if (openModals.length > 0) {
+      openModals.forEach(m => {
+        m.classList.remove('show');
+        m.classList.remove('active');
+      });
+      return;
+    }
+    if (state.selectedKeys && state.selectedKeys.size > 0) {
+      clearBatchSelection();
+      return;
+    }
+    const searchInput = document.getElementById('global-search-input');
+    if (document.activeElement === searchInput && searchInput.value) {
+      searchInput.value = '';
+      handleGlobalSearch('');
+      searchInput.blur();
+    }
+  }
+
+  // ENTER: Modal input submission
+  if (e.key === 'Enter') {
+    const activeEl = document.activeElement;
+    if (!activeEl || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'BUTTON') return;
+
+    if (activeEl.id === 'mkdir-name-input') {
+      e.preventDefault();
+      submitMkdir();
+    } else if (activeEl.id === 'create-bucket-name-input') {
+      e.preventDefault();
+      submitCreateBucket();
+    } else if (activeEl.id === 'move-dest-input') {
+      e.preventDefault();
+      submitMoveObject();
+    } else if (activeEl.id === 'domain-name-input') {
+      e.preventDefault();
+      submitAddDomain();
+    } else if (activeEl.id === 'quota-amount-input') {
+      e.preventDefault();
+      submitQuotaRequest();
+    } else if (activeEl.id === 'share-password-input' || activeEl.id === 'share-hours-input' || activeEl.id === 'share-downloads-input') {
+      e.preventDefault();
+      submitCreateShare();
+    } else if (activeEl.id === 'profile-modal-input-name' || activeEl.id === 'profile-modal-input-username') {
+      e.preventDefault();
+      submitSaveProfileInfo();
+    } else if (activeEl.id === 'profile-modal-pwd-current' || activeEl.id === 'profile-modal-pwd-new') {
+      e.preventDefault();
+      submitProfilePasswordChange();
+    } else if (activeEl.id === 'acc-pwd-old' || activeEl.id === 'acc-pwd-new') {
+      e.preventDefault();
+      submitChangePassword();
+    } else if (activeEl.id === 'acc-name-input' || activeEl.id === 'acc-username-input') {
+      e.preventDefault();
+      submitAccProfileSave();
+    }
   }
 });
 

@@ -732,8 +732,31 @@ func provisionMinIO(ak, sk, bucket string) {
 	log.Printf("[MinIO] Done: %s, bucket %s (10GB Quota)", ak, bucket)
 }
 
+func syncAllUsersToMinIO() {
+	if scyllaSession == nil {
+		return
+	}
+	exec.Command("mc", "alias", "set", "cosmos", "http://127.0.0.1:9010", "unityadmin", "UnityAdmin2026!").Run()
+	iter := scyllaSession.Query(`SELECT access_key, secret_key, bucket FROM oort.users`).Iter()
+	var ak, sk, bucket string
+	count := 0
+	for iter.Scan(&ak, &sk, &bucket) {
+		if ak != "" && sk != "" {
+			exec.Command("mc", "admin", "user", "add", "cosmos", ak, sk).Run()
+			exec.Command("mc", "admin", "policy", "attach", "cosmos", "readwrite", "--user", ak).Run()
+			if bucket != "" {
+				exec.Command("mc", "mb", "--ignore-existing", "cosmos/"+bucket).Run()
+			}
+			count++
+		}
+	}
+	iter.Close()
+	log.Printf("[MinIO] Verified and synced %d user credentials to MinIO", count)
+}
+
 func main() {
 	initDB()
+	go syncAllUsersToMinIO()
 	mux := http.NewServeMux()
 
 	// Static assets

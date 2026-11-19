@@ -123,6 +123,8 @@ func RegisterS3ConsoleRoutes(mux *http.ServeMux) {
 	handleRoute("/api/bucket/domain/remove", handleS3BucketDomainRemove)
 	handleRoute("/api/presign", handleS3Presign)
 	handleRoute("/api/mkdir", handleS3Mkdir)
+	handleRoute("/api/objects/mkdir", handleS3Mkdir)
+	handleRoute("/api/folders", handleS3Mkdir)
 	handleRoute("/api/profile", handleS3Profile)
 	handleRoute("/api/profile/image", handleS3ProfileImage)
 	handleRoute("/api/profile/update", handleS3ProfileUpdate)
@@ -576,7 +578,7 @@ func handleS3Presign(w http.ResponseWriter, r *http.Request) {
 // ─── POST /oort/api/mkdir — create a "folder" placeholder ──────────────────────
 
 func handleS3Mkdir(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != "POST" && r.Method != "PUT" {
 		jsonErr(w, "method not allowed", 405)
 		return
 	}
@@ -615,9 +617,16 @@ func handleS3Mkdir(w http.ResponseWriter, r *http.Request) {
 	key := req.Prefix
 	_, err = mc.PutObject(context.Background(), bucket, key, strings.NewReader(""), 0,
 		minio.PutObjectOptions{ContentType: "application/x-directory"})
+	if err != nil && strings.Contains(err.Error(), "The Access Key Id you provided does not exist in our records") {
+		exec.Command("mc", "admin", "user", "add", "cosmos", ak, sk).Run()
+		exec.Command("mc", "admin", "policy", "attach", "cosmos", "readwrite", "--user", ak).Run()
+		exec.Command("mc", "mb", "--ignore-existing", "cosmos/"+bucket).Run()
+		_, err = mc.PutObject(context.Background(), bucket, key, strings.NewReader(""), 0,
+			minio.PutObjectOptions{ContentType: "application/x-directory"})
+	}
 	if err != nil {
 		log.Printf("[S3] mkdir: %v", err)
-		jsonErr(w, "mkdir failed", 500)
+		jsonErr(w, fmt.Sprintf("mkdir failed: %v", err), 500)
 		return
 	}
 	jsonOK(w, map[string]string{"prefix": req.Prefix})
