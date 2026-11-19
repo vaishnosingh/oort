@@ -844,20 +844,39 @@ func handleS3Password(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		NewPassword string `json:"new_password"`
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
 	}
-	json.NewDecoder(r.Body).Decode(&req)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "invalid request", 400)
+		return
+	}
 	if len(req.NewPassword) < 8 {
 		jsonErr(w, "password must be at least 8 characters", 400)
 		return
 	}
 
-	// Change in ScyllaDB ONLY. MinIO API token (secret_key) remains unchanged.
-	hash, _ := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
-	err := scyllaSession.Query(`UPDATE oort.users SET password_hash = ? WHERE email = ?`,
-		string(hash), ak).Exec()
+	var currentHash string
+	if err := scyllaSession.Query(`SELECT password_hash FROM oort.users WHERE email = ?`, ak).Scan(&currentHash); err == nil && currentHash != "" {
+		if req.CurrentPassword != "" {
+			if err := bcrypt.CompareHashAndPassword([]byte(currentHash), []byte(req.CurrentPassword)); err != nil {
+				jsonErr(w, "current password does not match", 403)
+				return
+			}
+		}
+	}
+
+	// Hash password securely with bcrypt before storing
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
+		jsonErr(w, "failed to process password", 500)
+		return
+	}
+	if err := scyllaSession.Query(`UPDATE oort.users SET password_hash = ? WHERE email = ?`,
+		string(hash), ak).Exec(); err != nil {
 		log.Printf("[S3] password update scylla: %v", err)
+		jsonErr(w, "failed to save password", 500)
+		return
 	}
 
 	jsonOK(w, map[string]bool{"success": true})

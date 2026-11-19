@@ -17,7 +17,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -104,8 +103,6 @@ func initDB() {
 
 	log.Println("[DB] Oort ScyllaDB ready")
 }
-
-var pendingPasswords sync.Map // map[regToken]rawPassword
 
 func init() {
 	tmpl = template.Must(template.ParseFS(templatesFS, "templates/*.html"))
@@ -300,12 +297,6 @@ func handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pendingPasswords.Store(regToken, password)
-	go func(key string) {
-		time.Sleep(15 * time.Minute)
-		pendingPasswords.Delete(key)
-	}(regToken)
-
 	go sendVerificationEmail(email, regToken)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -340,8 +331,6 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `<html><body style="background:#0a0a0b;color:#fafafa;font-family:sans-serif;text-align:center;padding:100px"><h2>Invalid or expired code.</h2></body></html>`)
 		return
 	}
-
-	pendingPasswords.Delete(token)
 
 	accessKey := email
 	secretKey := strings.ReplaceAll(uuid.New().String(), "-", "") + strings.ReplaceAll(uuid.New().String(), "-", "")[:8]
