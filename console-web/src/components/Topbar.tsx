@@ -63,16 +63,29 @@ export const Topbar: React.FC<TopbarProps> = ({
         </button>
 
         <div className="topbar-breadcrumbs" id="topbar-breadcrumbs">
-          <span className="crumb-link" onClick={() => onNavigatePrefix('')}>
-            {bucketDisplayName || 'root'}
+          <span className="crumb-link" onClick={() => onNavigatePrefix('')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="13" height="13" fill="none" stroke="var(--ac-hex)" strokeWidth="2" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+            </svg>
+            <span>{bucketDisplayName || 'root'}</span>
           </span>
           {prefixParts.map((part, idx) => {
             const subPrefix = prefixParts.slice(0, idx + 1).join('/') + '/';
+            const isLast = idx === prefixParts.length - 1;
             return (
               <React.Fragment key={subPrefix}>
                 <span className="crumb-sep">/</span>
-                <span className="crumb-link" onClick={() => onNavigatePrefix(subPrefix)}>
-                  {part}
+                <span
+                  className={`crumb-link ${isLast ? 'crumb-active' : ''}`}
+                  onClick={() => onNavigatePrefix(subPrefix)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                >
+                  <svg width="12" height="12" fill="none" stroke="#fbbf24" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                  </svg>
+                  <span>{part}</span>
                 </span>
               </React.Fragment>
             );

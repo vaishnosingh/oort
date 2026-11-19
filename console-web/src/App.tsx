@@ -645,6 +645,8 @@ export const App: React.FC = () => {
             onSwitchView={handleSelectView}
             onEmptyBucket={handleEmptyBucket}
             onDeleteBucket={handleDeleteBucket}
+            onOpenMkdir={() => setIsMkdirOpen(true)}
+            onCopyText={copyText}
           />
         )}
 

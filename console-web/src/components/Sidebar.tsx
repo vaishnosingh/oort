@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ActiveView, BucketInfo, UserProfile } from '../types';
 
 interface SidebarProps {
@@ -25,10 +25,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenProfile,
   mobileOpen,
 }) => {
+  const [bucketMenuOpen, setBucketMenuOpen] = useState(false);
+  const [bucketSearch, setBucketSearch] = useState('');
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const displayName = profile?.name || profile?.username || 'User';
   const initial = (profile?.name || profile?.username || 'U').charAt(0).toUpperCase();
 
-  const getBucketLabel = (b: BucketInfo) => b.DisplayName || b.Name;
+  const currentBucketObj = buckets.find((b) => b.Name === currentBucket);
+  const currentBucketLabel = currentBucketObj?.DisplayName || currentBucketObj?.Name || currentBucket || 'No Bucket';
+
+  // Close bucket popover on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setBucketMenuOpen(false);
+      }
+    };
+    if (bucketMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [bucketMenuOpen]);
+
+  const filteredBuckets = buckets.filter((b) =>
+    (b.DisplayName || b.Name).toLowerCase().includes(bucketSearch.toLowerCase())
+  );
 
   return (
     <aside className={`app-sidebar ${mobileOpen ? 'mobile-open' : ''}`} id="app-sidebar">
@@ -43,29 +67,121 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="brand-badge">SOVEREIGN S3</span>
           </div>
         </a>
-        <div className="bucket-card">
-          <div className="bucket-card-label">
-            <span>Active Bucket</span>
+
+        {/* Custom Interactive Bucket Selector */}
+        <div className="custom-bucket-wrap" ref={menuRef}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--faint)', textTransform: 'uppercase' }}>
+              Active Partition
+            </span>
             <button
               className="btn btn-ghost btn-sm"
-              style={{ padding: '0 4px', fontSize: '11px', color: 'var(--ac-hex)' }}
+              style={{ padding: '0 4px', fontSize: '11px', color: 'var(--ac-hex)', height: 'auto' }}
               onClick={onOpenCreateBucket}
+              title="Create new S3 bucket partition"
             >
               + New
             </button>
           </div>
-          <select
-            id="sidebar-bucket-select"
-            className="bucket-select-custom"
-            value={currentBucket}
-            onChange={(e) => onSelectBucket(e.target.value)}
+
+          <div
+            className="custom-bucket-card"
+            onClick={() => setBucketMenuOpen(!bucketMenuOpen)}
+            role="button"
+            tabIndex={0}
+            title="Click to switch bucket partition"
           >
-            {buckets.map((b) => (
-              <option key={b.Name} value={b.Name}>
-                {getBucketLabel(b)}
-              </option>
-            ))}
-          </select>
+            <div className="custom-bucket-card-info">
+              <div className="custom-bucket-card-icon">
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <ellipse cx="12" cy="5" rx="9" ry="3" />
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                </svg>
+              </div>
+              <div className="custom-bucket-card-text">
+                <span className="custom-bucket-card-name">{currentBucketLabel}</span>
+                <span className="custom-bucket-card-sub">
+                  <span className="user-status-dot" style={{ width: '5px', height: '5px' }}></span>
+                  NVMe Ready
+                </span>
+              </div>
+            </div>
+            <svg
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              style={{ color: 'var(--faint)', transition: 'transform 0.2s', transform: bucketMenuOpen ? 'rotate(180deg)' : 'none' }}
+            >
+              <path d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+
+          {bucketMenuOpen && (
+            <div className="custom-bucket-popover" id="bucket-selector-popover">
+              <input
+                type="text"
+                className="custom-bucket-search"
+                placeholder="Search buckets..."
+                value={bucketSearch}
+                onChange={(e) => setBucketSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+              />
+              <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {filteredBuckets.length === 0 ? (
+                  <div style={{ padding: '8px', fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    No matching buckets
+                  </div>
+                ) : (
+                  filteredBuckets.map((b) => {
+                    const isSelected = b.Name === currentBucket;
+                    return (
+                      <button
+                        key={b.Name}
+                        className={`custom-bucket-item ${isSelected ? 'active' : ''}`}
+                        onClick={() => {
+                          onSelectBucket(b.Name);
+                          setBucketMenuOpen(false);
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <svg width="13" height="13" fill="none" stroke={isSelected ? 'var(--ac-hex)' : 'currentColor'} strokeWidth="2" viewBox="0 0 24 24">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                          </svg>
+                          <span style={{ fontSize: '12.5px', color: isSelected ? 'var(--ink)' : 'var(--dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {b.DisplayName || b.Name}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <svg width="14" height="14" fill="none" stroke="var(--ac-hex)" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <div style={{ borderTop: '1px solid var(--line)', marginTop: '6px', paddingTop: '6px' }}>
+                <button
+                  className="dropdown-item"
+                  style={{ color: 'var(--ac-hex)', fontSize: '12px', justifyContent: 'center' }}
+                  onClick={() => {
+                    setBucketMenuOpen(false);
+                    onOpenCreateBucket();
+                  }}
+                >
+                  + Create New Bucket
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -102,6 +218,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>Storage Overview</span>
         </a>
 
+        {/* Visual Quick Bucket Switcher under Core Storage */}
+        {buckets.length > 1 && (
+          <div style={{ margin: '6px 0 10px', padding: '0 8px' }}>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--mono)', color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 6px' }}>
+              Partitions ({buckets.length})
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {buckets.slice(0, 5).map((b) => {
+                const isActive = b.Name === currentBucket;
+                return (
+                  <div
+                    key={b.Name}
+                    className={`sidebar-bucket-item ${isActive ? 'active' : ''}`}
+                    onClick={() => {
+                      onSelectBucket(b.Name);
+                      onSelectView('browser');
+                    }}
+                    title={`Switch to bucket ${b.DisplayName || b.Name}`}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <svg width="12" height="12" fill="none" stroke={isActive ? 'var(--ac-hex)' : 'currentColor'} strokeWidth="2" viewBox="0 0 24 24">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                      </svg>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {b.DisplayName || b.Name}
+                      </span>
+                    </div>
+                    {isActive && (
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--ac-hex)', flexShrink: 0 }} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="nav-section-title">Access &amp; Protocols</div>
         <a
           href="#api"
@@ -127,7 +282,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" />
             <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
           </svg>
           <span>Custom Domains &amp; CDN</span>
         </a>
@@ -149,6 +304,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </svg>
           <span>Network Storage (NAS)</span>
         </a>
+
+        <div className="nav-section-title">Configuration</div>
         <a
           href="#settings"
           className={`nav-link ${activeView === 'settings' ? 'active' : ''}`}
@@ -158,13 +315,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }}
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0110 0v4" />
           </svg>
-          <span>Bucket Configuration</span>
+          <span>Bucket Settings</span>
         </a>
-
-        <div className="nav-section-title">Administration</div>
         <a
           href="#account"
           className={`nav-link ${activeView === 'account' ? 'active' : ''}`}
@@ -177,34 +332,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <span>Access &amp; Security</span>
+          <span>Account &amp; Security</span>
         </a>
       </nav>
 
-      {/* Sidebar Footer */}
-      <div className="sidebar-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-        <div className="user-profile-badge" onClick={onOpenProfile} role="button" tabIndex={0} title="Click to open your Profile">
-          <div className="user-avatar-circle" id="sidebar-user-avatar">
+      {/* Sidebar Footer User Card */}
+      <div className="sidebar-footer">
+        <div className="sidebar-user-card" onClick={onOpenProfile} role="button" tabIndex={0} title="Manage profile">
+          <div className="sidebar-user-avatar" id="sidebar-user-avatar">
             {profile?.profile_image ? (
               <img src={profile.profile_image} alt="Avatar" />
             ) : (
               initial
             )}
           </div>
-          <div className="user-details">
-            <div className="user-name-text" id="sidebar-user-name">{displayName}</div>
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name" id="sidebar-user-name">{displayName}</div>
             <div className="user-status-text">
-              <span className="user-status-dot"></span> Cluster Online
+              <span className="user-status-dot"></span>
+              <span>Online • NVMe</span>
             </div>
           </div>
         </div>
-        <a href="/oort/logout" className="btn btn-ghost btn-sm" style={{ padding: '8px', borderRadius: '8px' }} title="Sign Out">
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-        </a>
       </div>
     </aside>
   );
