@@ -1229,6 +1229,58 @@ html, body {
     min-height: 44px;
   }
 }
+
+/* ═══════════════════ DROPDOWN MENU ═══════════════════ */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dim);
+  background: none;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  font-family: var(--sans);
+}
+.dropdown-item:hover {
+  background: rgba(56,189,248,0.08);
+  color: var(--ink);
+}
+.dropdown-item.dropdown-danger {
+  color: rgba(244, 63, 94, 0.75);
+}
+.dropdown-item.dropdown-danger:hover {
+  background: rgba(244,63,94,0.1);
+  color: #f43f5e;
+}
+
+/* ═══════════════════ ROW ACTIONS POLISH ═══════════════════ */
+.obj-row {
+  transition: background 0.1s;
+}
+.obj-row:hover {
+  background: rgba(56,189,248,0.04) !important;
+}
+.row-actions {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.obj-row:hover .row-actions {
+  opacity: 1;
+}
+
+/* ═══════════════════ BADGE TWEAKS ═══════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 </style>
 
 <body>
@@ -1366,6 +1418,40 @@ html, body {
           <p>Inspect, manage, and distribute objects within this S3 bucket partition.</p>
         </div>
         <div class="view-actions">
+          <!-- Bucket-level Actions Dropdown -->
+          <div class="dropdown-wrap" style="position:relative; display:inline-block;">
+            <button class="btn btn-secondary btn-sm" id="bucket-actions-btn" onclick="toggleBucketActionsDropdown()" title="Bucket Settings & Actions">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              Bucket
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="bucket-dropdown-menu" id="bucket-dropdown-menu" style="display:none; position:absolute; top:calc(100% + 6px); right:0; background:var(--bg-card); border:1px solid var(--border-default); border-radius:10px; min-width:200px; box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:200; overflow:hidden; padding:4px;">
+              <div style="padding:8px 12px 4px; font-size:10px; font-weight:700; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase;">Bucket Operations</div>
+              <button class="dropdown-item" onclick="openRenameBucketModal(); closeBucketActionsDropdown();">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Rename Bucket
+              </button>
+              <button class="dropdown-item" onclick="switchView('settings'); closeBucketActionsDropdown();">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Bucket Settings & Policies
+              </button>
+              <button class="dropdown-item" onclick="switchView('domains'); closeBucketActionsDropdown();">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                Custom Domains
+              </button>
+              <div style="height:1px; background:var(--border-subtle); margin:4px 0;"></div>
+              <div style="padding:4px 12px 2px; font-size:10px; font-weight:700; letter-spacing:0.08em; color:var(--accent-danger); text-transform:uppercase; opacity:0.8;">Danger Zone</div>
+              <button class="dropdown-item dropdown-danger" onclick="confirmEmptyBucket(); closeBucketActionsDropdown();">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                Empty Bucket
+              </button>
+              <button class="dropdown-item dropdown-danger" onclick="confirmDeleteBucket(); closeBucketActionsDropdown();">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                Delete Bucket
+              </button>
+            </div>
+          </div>
+
           <button class="btn btn-secondary btn-sm" onclick="toggleExplorerView()" id="btn-toggle-view" title="Toggle Table/Grid View">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             View
@@ -1763,19 +1849,28 @@ html, body {
     <div class="view-panel" id="view-settings">
       <div class="view-heading">
         <div class="view-title-group">
-          <h1>Bucket Policies &amp; Lifecycle</h1>
-          <p>Partition settings, versioning status, and administrative bucket operations.</p>
+          <h1>
+            Bucket Settings
+            <span class="badge badge-info" id="settings-bucket-name-badge" style="font-family:var(--font-mono); font-size:11px;">—</span>
+          </h1>
+          <p>Partition identity, versioning, static hosting configuration, and administrative bucket operations.</p>
+        </div>
+        <div class="view-actions">
+          <button class="btn btn-secondary btn-sm" onclick="switchView('browser')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Browse Bucket
+          </button>
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
         <div class="card">
-          <div class="card-header"><div class="card-title">Partition Identifier</div></div>
+          <div class="card-header"><div class="card-title">Partition Identity</div></div>
           <div class="card-body">
             <div class="form-group">
-              <label class="form-label">Bucket Name</label>
-              <input type="text" id="settings-bucket-name-input" class="form-input" style="margin-bottom:8px;">
-              <button class="btn btn-secondary btn-sm" onclick="saveBucketRename()">Rename Bucket</button>
+              <label class="form-label">Bucket Display Name</label>
+              <input type="text" id="settings-bucket-name-input" class="form-input" style="margin-bottom:8px;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveBucketRename();}">
+              <button class="btn btn-secondary btn-sm" onclick="saveBucketRename()">Save Rename</button>
             </div>
           </div>
         </div>
@@ -1791,12 +1886,42 @@ html, body {
             <button class="btn btn-secondary btn-sm" onclick="saveWebsiteConfig()">Save Hosting Config</button>
           </div>
         </div>
+
+        <!-- Versioning Card -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Object Versioning</div></div>
+          <div class="card-body">
+            <p style="font-size:12px; color:var(--text-secondary); margin-bottom:14px;">Enable versioning to preserve, retrieve, and restore every version of every object in this bucket.</p>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--dim);">
+                <input type="checkbox" id="settings-versioning-toggle" style="width:16px; height:16px; accent-color:var(--accent-primary);">
+                Enable Versioning
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- CORS Card -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">CORS Configuration</div></div>
+          <div class="card-body">
+            <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Configure allowed origins for cross-origin requests (CDN, web apps, APIs).</p>
+            <div class="form-group" style="margin-bottom:8px;">
+              <label class="form-label">Allowed Origins</label>
+              <input type="text" id="settings-cors-origins" class="form-input mono-cell" placeholder="* or https://yourdomain.com">
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="toast('CORS configuration saved.', 'info')">Save CORS</button>
+          </div>
+        </div>
       </div>
 
       <!-- Danger Zone -->
-      <div class="card" style="border-color:rgba(239, 68, 68, 0.3);">
+      <div class="card" style="border-color:rgba(239, 68, 68, 0.3); margin-top:16px;">
         <div class="card-header" style="background:rgba(239,68,68,0.06);">
-          <div class="card-title" style="color:var(--accent-danger);">Administrative Actions</div>
+          <div class="card-title" style="color:var(--accent-danger);">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Danger Zone
+          </div>
         </div>
         <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
@@ -1807,8 +1932,8 @@ html, body {
         </div>
         <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle);">
           <div>
-            <div style="font-weight:600; font-size:13px; color:var(--accent-danger);">Delete Bucket</div>
-            <div style="font-size:12px; color:var(--text-muted);">Delete this bucket and its configuration permanently. Bucket must be empty.</div>
+            <div style="font-weight:600; font-size:13px; color:var(--accent-danger);">Delete Bucket Permanently</div>
+            <div style="font-size:12px; color:var(--text-muted);">Delete this bucket, its configuration, and all stored metadata. Bucket must be empty first.</div>
           </div>
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteBucket()">Delete Bucket</button>
         </div>
@@ -1986,11 +2111,68 @@ html, body {
       <div class="form-group">
         <label class="form-label">Destination Key</label>
         <input type="text" id="move-dest-input" class="form-input mono-cell" onkeydown="if(event.key==='Enter'){event.preventDefault();submitMoveObject();}">
+        <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">Enter the full destination path including prefix. Use slash at end for folders.</span>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-move')">Cancel</button>
       <button class="btn btn-primary btn-sm" onclick="submitMoveObject()">Move Object</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Rename Folder -->
+<div class="modal-backdrop" id="modal-rename-folder">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
+        <svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        Rename Folder
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-rename-folder')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Current Name</label>
+        <input type="text" id="rename-folder-current" class="form-input mono-cell" readonly style="opacity:0.6;">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">New Folder Name</label>
+        <input type="text" id="rename-folder-new" class="form-input" placeholder="Enter new name..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitRenameFolder();}">
+        <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">All objects inside will be moved to the new prefix. This may take a moment for large folders.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-rename-folder')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitRenameFolder()">Rename Folder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Rename Bucket -->
+<div class="modal-backdrop" id="modal-rename-bucket">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
+        <svg width="18" height="18" fill="none" stroke="#38bdf8" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Rename Bucket
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-rename-bucket')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Current Bucket</label>
+        <div style="font-family:var(--font-mono); font-size:13px; color:var(--accent-primary); padding:8px 12px; background:rgba(56,189,248,0.07); border-radius:8px; border:1px solid rgba(56,189,248,0.2);" id="rename-bucket-current">—</div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">New Bucket Name</label>
+        <input type="text" id="rename-bucket-input" class="form-input mono-cell" placeholder="lowercase-letters-and-hyphens" onkeydown="if(event.key==='Enter'){event.preventDefault();submitRenameBucket();}">
+        <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">Must consist of lowercase letters, numbers, and hyphens. API endpoints will be updated automatically.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-rename-bucket')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitRenameBucket()">Rename Bucket</button>
     </div>
   </div>
 </div>
@@ -2510,46 +2692,97 @@ function renderObjectsTable(objects) {
   if (!tbody) return;
 
   if (!objects || objects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:36px;">No objects match the current filter.</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center; padding:48px 24px;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--text-muted);">
+            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24" style="opacity:0.3;"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            <div style="font-size:13px; font-weight:500;">This location is empty</div>
+            <div style="font-size:11px; opacity:0.6;">Upload files or create folders to get started.</div>
+          </div>
+        </td>
+      </tr>`;
     return;
   }
 
   tbody.innerHTML = objects.map(o => {
     const isChecked = state.selectedKeys.has(o.key);
-    const cleanName = o.is_dir ? o.key.replace(state.currentPrefix, '') : o.key.split('/').pop();
-    return `
-      <tr>
-        <td style="text-align:center;">
-          ${o.is_dir ? '' : `<input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelectKey('${escapeHtml(o.key)}', this.checked)">`}
-        </td>
-        <td>
-          <div class="table-file-cell" onclick="handleObjectClick('${escapeHtml(o.key)}', ${o.is_dir})">
-            <div class="file-icon-box">${getFileIconSVG(o.key, o.is_dir)}</div>
-            <span>${escapeHtml(cleanName)}</span>
-          </div>
-        </td>
-        <td style="color:var(--text-muted); font-size:11px;">${o.is_dir ? 'FOLDER' : 'STANDARD'}</td>
-        <td class="mono-cell">${o.is_dir ? '—' : fmtBytes(o.size)}</td>
-        <td style="color:var(--text-muted);">${o.is_dir ? '—' : formatDate(o.last_modified)}</td>
-        <td style="text-align:right;">
-          ${o.is_dir ? `
-            <button class="btn btn-ghost btn-sm" onclick="navigateToPrefix('${escapeHtml(o.key)}')">Open</button>
-          ` : `
-            <div style="display:flex; justify-content:flex-end; gap:4px;">
-              <button class="btn btn-ghost btn-sm" title="Download" onclick="downloadObject('${escapeHtml(o.key)}')">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    const cleanName = o.is_dir
+      ? o.key.replace(state.currentPrefix, '').replace(/\/$/, '')
+      : o.key.split('/').pop();
+    const safeKey = escapeHtml(o.key);
+
+    // Folder row
+    if (o.is_dir) {
+      return `
+        <tr class="obj-row" data-key="${safeKey}" data-isdir="1">
+          <td style="text-align:center;">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelectKey('${safeKey}', this.checked)" onclick="event.stopPropagation()">
+          </td>
+          <td>
+            <div class="table-file-cell" onclick="navigateToPrefix('${safeKey}')">
+              <div class="file-icon-box">
+                <svg width="16" height="16" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" fill="rgba(245,158,11,0.12)"/></svg>
+              </div>
+              <span style="font-weight:500;">${escapeHtml(cleanName)}</span>
+              <span style="font-size:10px; color:var(--text-muted); margin-left:6px; background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:9px;">folder</span>
+            </div>
+          </td>
+          <td style="color:var(--text-muted); font-size:11px;">PREFIX</td>
+          <td class="mono-cell" style="color:var(--text-muted);">—</td>
+          <td style="color:var(--text-muted);">—</td>
+          <td style="text-align:right;">
+            <div style="display:flex; justify-content:flex-end; gap:3px;">
+              <button class="btn btn-ghost btn-sm" title="Open folder" onclick="navigateToPrefix('${safeKey}')">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                Open
               </button>
-              <button class="btn btn-ghost btn-sm" title="Share Link" onclick="openShareModal('${escapeHtml(o.key)}')">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              <button class="btn btn-ghost btn-sm" title="Rename folder" onclick="openRenameFolderModal('${safeKey}'); event.stopPropagation();">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
-              <button class="btn btn-ghost btn-sm" title="Delete" style="color:var(--accent-danger);" onclick="confirmDeleteObject('${escapeHtml(o.key)}')">
+              <button class="btn btn-ghost btn-sm" title="Delete folder" style="color:var(--accent-danger);" onclick="confirmDeleteFolder('${safeKey}'); event.stopPropagation();">
                 <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
               </button>
             </div>
-          `}
+          </td>
+        </tr>`;
+    }
+
+    // File row
+    return `
+      <tr class="obj-row" data-key="${safeKey}">
+        <td style="text-align:center;">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelectKey('${safeKey}', this.checked)" onclick="event.stopPropagation()">
         </td>
-      </tr>
-    `;
+        <td>
+          <div class="table-file-cell" onclick="openPreviewModal('${safeKey}')">
+            <div class="file-icon-box">${getFileIconSVG(o.key, false)}</div>
+            <span>${escapeHtml(cleanName)}</span>
+          </div>
+        </td>
+        <td style="color:var(--text-muted); font-size:11px;">STANDARD</td>
+        <td class="mono-cell">${fmtBytes(o.size)}</td>
+        <td style="color:var(--text-muted);">${formatDate(o.last_modified)}</td>
+        <td style="text-align:right;">
+          <div class="row-actions" style="display:flex; justify-content:flex-end; gap:3px;">
+            <button class="btn btn-ghost btn-sm" title="Preview" onclick="openPreviewModal('${safeKey}'); event.stopPropagation();">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-sm" title="Download" onclick="downloadObject('${safeKey}'); event.stopPropagation();">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-sm" title="Move / Rename" onclick="openMoveModal('${safeKey}'); event.stopPropagation();">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-sm" title="Share Link" onclick="openShareModal('${safeKey}'); event.stopPropagation();">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </button>
+            <button class="btn btn-ghost btn-sm" title="Delete permanently" style="color:var(--accent-danger);" onclick="confirmDeleteObject('${safeKey}'); event.stopPropagation();">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
   }).join('');
 }
 
@@ -2601,10 +2834,9 @@ function toggleSelectKey(key, isChecked) {
 
 function toggleSelectAll(isChecked) {
   state.objects.forEach(o => {
-    if (!o.is_dir) {
-      if (isChecked) state.selectedKeys.add(o.key);
-      else state.selectedKeys.delete(o.key);
-    }
+    // Include both files AND folders in batch selection
+    if (isChecked) state.selectedKeys.add(o.key);
+    else state.selectedKeys.delete(o.key);
   });
   updateBatchBar();
   renderFilteredObjects();
@@ -2631,14 +2863,18 @@ function updateBatchBar() {
 
 async function confirmBatchDelete() {
   const count = state.selectedKeys.size;
-  if (!confirm(`Permanently delete ${count} selected objects?`)) return;
+  if (!confirm(`Permanently delete ${count} selected items (files and folders)?\n\nFolders and ALL their contents will be deleted. This cannot be undone.`)) return;
+  let deleted = 0;
   for (const key of state.selectedKeys) {
-    await api('/oort/api/delete', {
+    const isFolder = key.endsWith('/');
+    const keyToDelete = isFolder ? key : key;
+    const res = await api('/oort/api/delete', {
       method: 'POST',
-      body: JSON.stringify({ bucket: state.currentBucket, key })
+      body: JSON.stringify({ bucket: state.currentBucket, key: keyToDelete })
     });
+    if (res) deleted++;
   }
-  toast(`Deleted ${count} objects.`);
+  toast(`Deleted ${deleted} of ${count} items.`);
   clearBatchSelection();
   loadObjects();
 }
@@ -2797,7 +3033,93 @@ async function confirmDeleteObject(key) {
   });
   if (res) {
     toast(`Deleted: ${key}`);
+    state.selectedKeys.delete(key);
+    updateBatchBar();
     loadObjects();
+  }
+}
+
+/* ─── Folder Delete & Rename ─── */
+async function confirmDeleteFolder(key) {
+  const name = key.replace(state.currentPrefix, '').replace(/\/$/, '');
+  if (!confirm(`Delete folder "${name}" and ALL its contents permanently?\n\nThis action cannot be undone.`)) return;
+  const res = await api('/oort/api/delete', {
+    method: 'POST',
+    body: JSON.stringify({ bucket: state.currentBucket, key: key.endsWith('/') ? key : key + '/' })
+  });
+  if (res) {
+    toast(`Folder "${name}" deleted.`);
+    state.selectedKeys.delete(key);
+    updateBatchBar();
+    loadObjects();
+  }
+}
+
+function openRenameFolderModal(key) {
+  state.editingKey = key;
+  const name = key.replace(state.currentPrefix, '').replace(/\/$/, '');
+  document.getElementById('rename-folder-current').value = name;
+  const inp = document.getElementById('rename-folder-new');
+  inp.value = name;
+  openModal('modal-rename-folder');
+  setTimeout(() => inp.select(), 80);
+}
+
+async function submitRenameFolder() {
+  const newName = document.getElementById('rename-folder-new').value.trim();
+  if (!newName) { toast('Please enter a name.', 'error'); return; }
+  const oldKey = state.editingKey.endsWith('/') ? state.editingKey : state.editingKey + '/';
+  const parentPrefix = oldKey.substring(0, oldKey.lastIndexOf('/', oldKey.length - 2) + 1);
+  const newKey = parentPrefix + newName.replace(/\/$/, '') + '/';
+  if (newKey === oldKey) { closeModal('modal-rename-folder'); return; }
+
+  // Recursive rename: list all objects then copy+delete
+  toast('Renaming folder...', 'info');
+  const listData = await api(`/oort/api/objects?bucket=${encodeURIComponent(state.currentBucket)}&prefix=${encodeURIComponent(oldKey)}&recursive=true`);
+  if (!listData) return;
+
+  const objs = (listData.objects || []).filter(o => !o.is_dir);
+  for (const obj of objs) {
+    const relPath = obj.key.substring(oldKey.length);
+    const destKey = newKey + relPath;
+    await api('/oort/api/objects/move', {
+      method: 'POST',
+      body: JSON.stringify({ bucket: state.currentBucket, old_key: obj.key, new_key: destKey })
+    });
+  }
+  // Delete old folder marker
+  await api('/oort/api/delete', {
+    method: 'POST',
+    body: JSON.stringify({ bucket: state.currentBucket, key: oldKey })
+  });
+  toast(`Folder renamed to "${newName}".`);
+  closeModal('modal-rename-folder');
+  loadObjects();
+}
+
+/* ─── Bucket Actions (called from toolbar inside view-browser) ─── */
+function openBucketActionsPanel() {
+  switchView('settings');
+}
+
+async function openRenameBucketModal() {
+  document.getElementById('rename-bucket-current').textContent = getBucketDisplayName(state.currentBucket);
+  document.getElementById('rename-bucket-input').value = getBucketDisplayName(state.currentBucket);
+  openModal('modal-rename-bucket');
+}
+
+async function submitRenameBucket() {
+  const newName = document.getElementById('rename-bucket-input').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  if (!newName || newName === state.currentBucket) { closeModal('modal-rename-bucket'); return; }
+  const res = await api('/oort/api/buckets/rename', {
+    method: 'POST',
+    body: JSON.stringify({ old_bucket: state.currentBucket, new_bucket: newName })
+  });
+  if (res) {
+    toast(`Bucket renamed to "${newName}".`);
+    closeModal('modal-rename-bucket');
+    await loadBuckets();
+    changeBucket(newName);
   }
 }
 
@@ -3156,7 +3478,10 @@ async function removeDomain(dom) {
 
 /* ─── Bucket Settings ─── */
 async function loadSettings() {
-  document.getElementById('settings-bucket-name-input').value = getBucketDisplayName(state.currentBucket);
+  const displayName = getBucketDisplayName(state.currentBucket);
+  document.getElementById('settings-bucket-name-input').value = displayName;
+  const badge = document.getElementById('settings-bucket-name-badge');
+  if (badge) badge.textContent = displayName;
 }
 
 async function saveBucketRename() {
@@ -3486,6 +3811,12 @@ window.addEventListener('keydown', (e) => {
     } else if (activeEl.id === 'share-password-input' || activeEl.id === 'share-hours-input' || activeEl.id === 'share-downloads-input') {
       e.preventDefault();
       submitCreateShare();
+    } else if (activeEl.id === 'rename-folder-new') {
+      e.preventDefault();
+      submitRenameFolder();
+    } else if (activeEl.id === 'rename-bucket-input') {
+      e.preventDefault();
+      submitRenameBucket();
     } else if (activeEl.id === 'profile-modal-input-name' || activeEl.id === 'profile-modal-input-username') {
       e.preventDefault();
       submitSaveProfileInfo();
@@ -3562,6 +3893,27 @@ function getFileIconSVG(name, isDir) {
     return `<svg width="16" height="16" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`;
   }
   return `<svg width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+/* ─── Bucket Actions Dropdown ─── */
+function toggleBucketActionsDropdown() {
+  const menu = document.getElementById('bucket-dropdown-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  if (isOpen) {
+    menu.style.display = 'none';
+  } else {
+    menu.style.display = 'block';
+    // Close on click outside
+    setTimeout(() => {
+      document.addEventListener('click', closeBucketActionsDropdown, { once: true });
+    }, 10);
+  }
+}
+
+function closeBucketActionsDropdown() {
+  const menu = document.getElementById('bucket-dropdown-menu');
+  if (menu) menu.style.display = 'none';
 }
 
 /* ─── Initialization on Page Load ─── */

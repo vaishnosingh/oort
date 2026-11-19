@@ -509,17 +509,38 @@ func handleS3Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ak, sk, defBucket, ok := authS3Console(r)
-	bucket := r.URL.Query().Get("bucket")
-	if bucket == "" { bucket = defBucket }
 	if !ok {
 		jsonErr(w, "unauthorized", 401)
 		return
 	}
+
+	bucket := r.URL.Query().Get("bucket")
 	key := r.URL.Query().Get("key")
+
+	// If not in query params, try JSON body
+	if key == "" || bucket == "" {
+		var body struct {
+			Bucket string `json:"bucket"`
+			Key    string `json:"key"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+			if bucket == "" && body.Bucket != "" {
+				bucket = body.Bucket
+			}
+			if key == "" && body.Key != "" {
+				key = body.Key
+			}
+		}
+	}
+
+	if bucket == "" {
+		bucket = defBucket
+	}
 	if key == "" {
 		jsonErr(w, "missing key", 400)
 		return
 	}
+
 	mc, err := minio.New(minioEndpoint, &minio.Options{Creds: credentials.NewStaticV4(ak, sk, ""), Secure: false})
 	if err != nil {
 		jsonErr(w, "minio error", 500)
@@ -533,13 +554,15 @@ func handleS3Delete(w http.ResponseWriter, r *http.Request) {
 				mc.RemoveObject(ctx, bucket, obj.Key, minio.RemoveObjectOptions{VersionID: obj.VersionID})
 			}
 		}
+		// Also delete the folder marker itself if present
+		mc.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{})
 	} else {
 		if err := mc.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{}); err != nil {
 			jsonErr(w, "delete failed", 500)
 			return
 		}
 	}
-	
+
 	go dispatchWebhooks(bucket, "object:deleted", key, 0, "")
 	jsonOK(w, map[string]bool{"deleted": true})
 }
@@ -707,12 +730,27 @@ func handleS3RenameBucket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		OldName string `json:"old_name"`
-		NewName string `json:"new_name"`
+		// Accept multiple field name conventions from frontend
+		OldName   string `json:"old_name"`
+		NewName   string `json:"new_name"`
+		OldBucket string `json:"old_bucket"`
+		NewBucket string `json:"new_bucket"`
+		Bucket    string `json:"bucket"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonErr(w, "invalid request", 400)
 		return
+	}
+
+	// Normalize field names
+	if req.OldName == "" && req.OldBucket != "" {
+		req.OldName = req.OldBucket
+	}
+	if req.OldName == "" && req.Bucket != "" {
+		req.OldName = req.Bucket
+	}
+	if req.NewName == "" && req.NewBucket != "" {
+		req.NewName = req.NewBucket
 	}
 
 	displayName := strings.TrimSpace(req.NewName)
@@ -721,8 +759,8 @@ func handleS3RenameBucket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.OldName == defBucket {
-		// Rename default bucket
+	if req.OldName == "" || req.OldName == defBucket {
+		// Rename default bucket display name
 		scyllaSession.Query(`UPDATE oort.users SET bucket_display_name = ? WHERE email = ?`, displayName, ak).Exec()
 	} else {
 		// Verify ownership in DB
