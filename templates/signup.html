@@ -636,8 +636,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
           <div class="field-hint" id="hint-pwd2"></div>
         </div>
 
-        <!-- Cloudflare Turnstile Invisible Verification -->
-        <div class="cf-turnstile" data-sitekey="{{.TurnstileSiteKey}}" data-theme="dark" data-size="invisible"></div>
+        <!-- Cloudflare Turnstile Verification -->
+        <div class="cf-turnstile" data-sitekey="{{.TurnstileSiteKey}}" data-theme="dark" style="display: flex; justify-content: center; margin-bottom: 14px;"></div>
 
         <button type="submit" class="btn-submit" id="submitBtn">Create Account</button>
       </form>
@@ -916,10 +916,14 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     var iv = setInterval(function() {
       checks++;
       var t = form.querySelector('[name="cf-turnstile-response"]');
-      if ((t && t.value) || checks > 30) {
+      if (t && t.value) {
         clearInterval(iv);
         btn.textContent = 'Creating account…';
         form.submit();
+      } else if (checks > 60) {
+        clearInterval(iv);
+        btn.textContent = 'Create Account';
+        btn.disabled = false;
       }
     }, 100);
     return;

@@ -517,8 +517,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
           </div>
         </div>
 
-        <!-- Cloudflare Turnstile Invisible Verification -->
-        <div class="cf-turnstile" data-sitekey="{{.TurnstileSiteKey}}" data-theme="dark" data-size="invisible"></div>
+        <!-- Cloudflare Turnstile Verification -->
+        <div class="cf-turnstile" data-sitekey="{{.TurnstileSiteKey}}" data-theme="dark" style="display: flex; justify-content: center; margin-bottom: 14px;"></div>
 
         <button type="submit" class="btn-submit" id="submitBtn">Sign In</button>
       </form>
@@ -722,10 +722,15 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     var iv = setInterval(function() {
       checks++;
       var t = form.querySelector('[name="cf-turnstile-response"]');
-      if ((t && t.value) || checks > 30) {
+      if (t && t.value) {
         clearInterval(iv);
         btn.textContent = 'Signing in…';
         form.submit();
+      } else if (checks > 60) {
+        clearInterval(iv);
+        btn.textContent = 'Sign In';
+        btn.style.opacity = '1';
+        btn.disabled = false;
       }
     }, 100);
     return;

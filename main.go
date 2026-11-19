@@ -179,14 +179,11 @@ func getTurnstileSiteKey() string {
 	if k := os.Getenv("CF_TURNSTILE_SITEKEY"); k != "" {
 		return k
 	}
-	return "1x00000000000000000000AA"
+	return "0x4AAAAAAF_flMp-6vS8-3h7"
 }
 
 func getTurnstileSecret() string {
-	if s := os.Getenv("CF_TURNSTILE_SECRET"); s != "" {
-		return s
-	}
-	return "1x0000000000000000000000000000000AA"
+	return os.Getenv("CF_TURNSTILE_SECRET")
 }
 
 type turnstileVerifyResponse struct {
