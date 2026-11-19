@@ -1,0 +1,21 @@
+# Compiled binaries
+oort
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Environment & local secrets
+*.env
+*.env.*
+turnstile.env
+
+# OS & Editor files
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
